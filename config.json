@@ -1,0 +1,8 @@
+{
+  "openrouter_api_key": "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",
+  "default_num_clips": 5,
+  "add_captions": true,
+  "add_hook": true,
+  "model": "meta-llama/llama-3.1-70b-instruct",
+  "whisper_model": "base"
+}

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Short Clipper - Auto Video Clipper</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-video"></i> YT Short Clipper
+            </span>
+            <span class="text-light">
+                <i class="fas fa-code"></i> Web Version v1.0
+            </span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Alert -->
+        <div id="alert-container"></div>
+
+        <!-- Main Card -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cut"></i> Auto Video Clipper</h5>
+            </div>
+            <div class="card-body">
+                <!-- Input Form -->
+                <div id="input-section">
+                    <div class="mb-3">
+                        <label for="video-url" class="form-label">
+                            <i class="fas fa-link"></i> Video URL
+                        </label>
+                        <input 
+                            type="text" 
+                            class="form-control form-control-lg" 
+                            id="video-url" 
+                            placeholder="Paste YouTube, TikTok, Instagram, Facebook, or Twitch URL"
+                        >
+                        <div class="form-text">
+                            Supported: YouTube, TikTok, Instagram, Facebook, Twitch
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="num-clips" class="form-label">
+                                <i class="fas fa-list-ol"></i> Jumlah Klip
+                            </label>
+                            <input 
+                                type="number" 
+                                class="form-control" 
+                                id="num-clips" 
+                                value="5" 
+                                min="1" 
+                                max="10"
+                            >
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check form-switch mt-4">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    id="add-captions" 
+                                    checked
+                                >
+                                <label class="form-check-label" for="add-captions">
+                                    <i class="fas fa-closed-captioning"></i> Tambah Subtitle
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check form-switch mt-4">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    id="add-hook" 
+                                    checked
+                                >
+                                <label class="form-check-label" for="add-hook">
+                                    <i class="fas fa-fish"></i> Tambah Hook Intro
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button 
+                        class="btn btn-primary btn-lg w-100" 
+                        id="start-btn"
+                        onclick="startProcessing()"
+                    >
+                        <i class="fas fa-play"></i> Mulai Proses
+                    </button>
+                </div>
+
+                <!-- Processing Status -->
+                <div id="processing-section" style="display: none;">
+                    <div class="text-center mb-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Processing...</span>
+                        </div>
+                    </div>
+
+                    <h5 id="status-text" class="text-center mb-3">Memulai...</h5>
+
+                    <div class="progress mb-3" style="height: 30px;">
+                        <div 
+                            id="progress-bar" 
+                            class="progress-bar progress-bar-striped progress-bar-animated" 
+                            role="progressbar" 
+                            style="width: 0%"
+                        >
+                            <span id="progress-text">0%</span>
+                        </div>
+                    </div>
+
+                    <div id="clip-progress" class="text-center text-muted">
+                        <small>Klip: <span id="current-clip">0</span>/<span id="total-clips">0</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clips Gallery -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-film"></i> Hasil Klip</h5>
+                <button class="btn btn-sm btn-light" onclick="loadClips()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="clips-container" class="row">
+                    <!-- Clips will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal fade" id="settingsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-cog"></i> Pengaturan
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">OpenRouter API Key</label>
+                            <input 
+                                type="password" 
+                                class="form-control" 
+                                id="api-key-input"
+                                placeholder="sk-or-v1-..."
+                            >
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">AI Model</label>
+                            <select class="form-select" id="model-select">
+                                <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B (Recommended)</option>
+                                <option value="meta-llama/llama-3.1-405b-instruct">Llama 3.1 405B (Premium)</option>
+                                <option value="google/gemini-flash-1.5">Gemini Flash 1.5</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Whisper Model</label>
+                            <select class="form-select" id="whisper-model-select">
+                                <option value="tiny">Tiny (Fastest)</option>
+                                <option value="base" selected>Base (Balanced)</option>
+                                <option value="small">Small (Better)</option>
+                                <option value="medium">Medium (Best)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-primary" onclick="saveSettings()">Simpan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Button (Floating) -->
+    <button 
+        class="btn btn-dark btn-floating" 
+        data-bs-toggle="modal" 
+        data-bs-target="#settingsModal"
+        title="Settings"
+    >
+        <i class="fas fa-cog"></i>
+    </button>
+
+    <footer class="text-center mt-5 mb-3 text-muted">
+        <small>
+            🎬 YT Short Clipper v1.0 | 
+            Powered by OpenRouter + Whisper + Edge TTS
+        </small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
